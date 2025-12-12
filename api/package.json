@@ -6,7 +6,7 @@
   "scripts": {
     "start": "tsc && node --env-file=.env build/index.js",
     "build": "tsc",
-    "start:dev": "nodemon index.ts",
+    "start:dev": "nodemon --exec \"node --env-file=.env -r ts-node/register\" index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
