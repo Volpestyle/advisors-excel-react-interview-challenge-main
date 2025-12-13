@@ -7,17 +7,17 @@ const router = express.Router();
 const getAccountSchema: Schema = Joi.string().required();
 
 router.get("/:accountID", async (request: Request, response: Response) => {
-  const {error} = getAccountSchema.validate(request.params.accountID);
-  
+  const { error } = getAccountSchema.validate(request.params.accountID);
+
   if (error) {
-    return response.status(400).send(error.details[0].message);
+    return response.status(400).json({ error: error.details[0].message });
   }
 
   try {
     const account = await getAccount(request.params.accountID);
     response.send(account);
   } catch (err) {
-    response.status(404).send({"error": "Account not found"});
+    response.status(404).send({ "error": "Account not found" });
   }
 });
 
