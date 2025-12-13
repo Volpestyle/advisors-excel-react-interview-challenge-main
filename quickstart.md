@@ -1,11 +1,4 @@
-# Quickstart
-
-This guide runs Postgres in Docker and the API/UI locally (fastest iteration).
-
-## Prereqs
-
-- Docker Desktop
-- Node.js + npm
+# Quickstart Commands
 
 ## Start the database (Docker)
 
@@ -25,10 +18,6 @@ npm install
 npm run start:dev
 ```
 
-Notes:
-- Run `npm run start:dev` from inside `api/` so it picks up `api/.env`.
-- Root `.env` is for Docker Compose and uses `challenge_db` as the hostname; `api/.env` should use `localhost` when the API runs on your machine.
-
 API runs on `http://localhost:3000`.
 
 ## Run the UI locally
@@ -42,6 +31,13 @@ npm start
 ```
 
 UI runs on `http://localhost:3001`.
+
+## Run everything in Docker
+
+```sh
+docker compose build
+docker compose up -d
+```
 
 ## View the DB (CLI)
 
@@ -66,4 +62,10 @@ From the repo root:
 
 ```sh
 docker compose stop db
+```
+
+## Wipe DB (and other containers):
+
+```sh
+docker compose down --remove-orphans --volumes
 ```
