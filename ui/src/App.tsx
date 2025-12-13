@@ -1,61 +1,56 @@
-import { useState } from 'react';
-import './App.css';
-import { Grid } from '@mui/material';
-import { SignIn } from './components/SignIn';
-import { AccountDashboard } from './components/AccountDashboard';
-import { account } from './Types/Account';
-
-
+import { useState } from "react";
+import "./App.css";
+import { Alert, Grid } from "@mui/material";
+import { SignIn } from "./components/SignIn";
+import { AccountDashboard } from "./components/AccountDashboard";
+import { Account, AccountData } from "./Types/Account";
+import { api } from "./lib/api";
 
 export const App = () => {
-  const [accountNumberError, setAccountNumberError] = useState(false);
-  const [account, setAccount] = useState<account | undefined>(undefined);
+  const [accountNumberError, setAccountNumberError] = useState<
+    Error | undefined
+  >(undefined);
+  const [account, setAccount] = useState<Account | undefined>(undefined);
 
   const signIn = async (accountNumber: number) => {
-    const response = await fetch(`http://localhost:3000/accounts/${accountNumber}`);
-
-    if(response.status !== 200) {
-      alert('Account not found');
-      setAccountNumberError(true);
+    try {
+      const accountData = await api<AccountData>(`accounts/${accountNumber}`, {
+        method: "GET",
+      });
+      setAccount({
+        accountNumber: accountData.account_number,
+        name: accountData.name,
+        amount: accountData.amount,
+        type: accountData.type,
+        creditLimit: accountData.credit_limit,
+      });
+    } catch (error) {
+      setAccountNumberError(error as Error);
       setAccount(undefined);
       return;
     }
-      
-    setAccountNumberError(false);
-    const data = await response.json();
-    console.log(data);
-    setAccount({
-      accountNumber: data.account_number,
-      name: data.name,
-      amount: data.amount,
-      type: data.type,
-      creditLimit: data.credit_limit
-    });
-  }
+  };
   const signOut = async () => {
     setAccount(undefined);
-  }
-
-  const Page = () => {
-    if(account) {
-      return <AccountDashboard account={account} signOut={signOut}/>
-    } else {
-      return <SignIn 
-        signIn={signIn}
-        accountNumberError={accountNumberError}
-      />
-    }
-  }
+  };
 
   return (
     <div className="app">
       <Grid container>
         <Grid item xs={1} />
         <Grid item xs={10}>
-          <Page />
+          {account ? (
+            <AccountDashboard account={account} signOut={signOut} />
+          ) : (
+            <SignIn
+              signIn={signIn}
+              accountNumberError={accountNumberError}
+              setAccountNumberError={setAccountNumberError}
+            />
+          )}
         </Grid>
         <Grid item xs={1} />
       </Grid>
     </div>
   );
-}
+};
