@@ -1,6 +1,5 @@
 import { runInTransaction } from "../utils/db";
-import { Account, getAccount } from "./accountHandler";
-import { PoolClient, QueryResult } from "pg";
+import { PoolClient } from "pg";
 
 export enum TransactionType {
   WITHDRAWAL = 'withdrawal',
@@ -10,8 +9,8 @@ export enum TransactionType {
 /**
  * Transactional read of an account that locks the row for updating.
  */
-export const getAccountForUpdate = async (accountID: string, client: PoolClient): Promise<Account> => {
-  const res: QueryResult<Account> = await client.query(`
+export const getAccountForUpdate = async (accountID: string, client: PoolClient) => {
+  const res = await client.query(`
     SELECT account_number, name, amount, type, credit_limit 
     FROM accounts 
     WHERE account_number = $1
@@ -66,7 +65,7 @@ export const withdrawal = async (accountID: string, amount: number) => {
 
     account.amount -= amount;
 
-    // Update the accounts table 
+    // Update the account 
     const accountUpdate = await client.query(`
         UPDATE accounts
         SET amount = $1 
@@ -78,7 +77,7 @@ export const withdrawal = async (accountID: string, amount: number) => {
       throw new Error(`Account ${accountID} not found or update failed.`);
     }
 
-    // Insert into the transactions table
+    // Insert the transaction
     await client.query(`
         INSERT INTO transactions (account_number, amount, type, created_at)
         VALUES ($1, $2, $3, NOW())
@@ -99,7 +98,7 @@ export const deposit = async (accountID: string, amount: number) => {
   const updatedAccount = await runInTransaction(async (client: PoolClient) => {
     const account = await getAccountForUpdate(accountID, client);
 
-    // If this is a credit account, the customer cannot deposit more in their account than is needed to 0 out the account.
+    // If this is a credit account, cannot deposit more than is needed to 0 out the account.
     if (account.type === 'credit') {
       if (account.amount + amount > 0) {
         throw new Error("You cannot deposit more than is needed to 0 out your account.");
@@ -108,7 +107,7 @@ export const deposit = async (accountID: string, amount: number) => {
 
     account.amount += amount;
 
-    // Update the accounts table
+    // Update the account 
     const accountUpdate = await client.query(`
         UPDATE accounts
         SET amount = $1 
@@ -120,7 +119,7 @@ export const deposit = async (accountID: string, amount: number) => {
       throw new Error(`Account ${accountID} not found or update failed.`);
     }
 
-    // Insert into the transactions table
+    // Insert the transaction
     await client.query(`
         INSERT INTO transactions (account_number, amount, type, created_at)
         VALUES ($1, $2, $3, NOW())
