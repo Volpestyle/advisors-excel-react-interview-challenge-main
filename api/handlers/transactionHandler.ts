@@ -1,4 +1,4 @@
-import { runInTransaction } from "../utils/db";
+import { query, runInTransaction } from "../utils/db";
 import { PoolClient } from "pg";
 
 export enum TransactionType {
@@ -25,7 +25,12 @@ export const getAccountForUpdate = async (accountID: string, client: PoolClient)
   return res.rows[0];
 };
 
+// Withdrawal cap logic is implemented as 24 hour rolling window
 export const withdrawal = async (accountID: string, amount: number) => {
+  if (amount <= 0 || isNaN(amount)) {
+    throw new Error("Amount must be greater than 0");
+  }
+
   // Only dispense in $5 bills
   if (amount % 5 !== 0) {
     throw new Error("Amount must be dispensable in $5 bills");
@@ -90,6 +95,10 @@ export const withdrawal = async (accountID: string, amount: number) => {
 }
 
 export const deposit = async (accountID: string, amount: number) => {
+  if (amount <= 0 || isNaN(amount)) {
+    throw new Error("Amount must be greater than 0");
+  }
+
   if (amount > 1000) {
     throw new Error("You cannot deposit more than $1000 at a time.");
   }
@@ -128,4 +137,14 @@ export const deposit = async (accountID: string, amount: number) => {
   });
 
   return updatedAccount;
+}
+
+export const dailyWithdrawalTotal = async (accountID: string) => {
+  const result = await query(`
+    SELECT SUM(amount) as daily_withdrawal_amount
+    FROM transactions
+    WHERE account_number = $1 AND type = 'withdrawal'
+    AND created_at >= NOW() - INTERVAL '1 day'
+  `, [accountID]);
+  return result.rows[0]?.daily_withdrawal_amount || 0;
 }

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import Joi, { Schema } from "joi";
-import { deposit, withdrawal } from "../handlers/transactionHandler";
+import { dailyWithdrawalTotal, deposit, withdrawal } from "../handlers/transactionHandler";
 
 const router = express.Router();
 
@@ -35,6 +35,17 @@ router.put("/:accountID/deposit", async (request: Request, response: Response) =
   try {
     const updatedAccount = await deposit(request.params.accountID, request.body.amount);
     return response.status(200).send(updatedAccount);
+  } catch (err) {
+    if (err instanceof Error) {
+      return response.status(400).send({ "error": err.message });
+    }
+  }
+});
+
+router.get("/:accountID/daily-withdrawal-total", async (request: Request, response: Response) => {
+  try {
+    const total = await dailyWithdrawalTotal(request.params.accountID);
+    return response.status(200).json(Number(total));
   } catch (err) {
     if (err instanceof Error) {
       return response.status(400).send({ "error": err.message });

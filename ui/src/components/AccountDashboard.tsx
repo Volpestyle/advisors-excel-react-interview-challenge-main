@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Account, AccountData } from "../Types/Account";
 import Paper from "@mui/material/Paper/Paper";
 import {
@@ -46,6 +46,10 @@ export const AccountDashboard = (props: AccountDashboardProps) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const [withdrawalTotal, setWithdrawalTotal] = useState<number | undefined>(
+    undefined
+  );
+
   const resetMessages = () => {
     setWithdrawSuccessMessage(undefined);
     setDepositSuccessMessage(undefined);
@@ -54,6 +58,16 @@ export const AccountDashboard = (props: AccountDashboardProps) => {
   };
 
   const { signOut } = props;
+
+  useEffect(() => {
+    const fetchWithdrawalTotal = async () => {
+      const total = await api<number>(
+        `transactions/${account.accountNumber}/daily-withdrawal-total`
+      );
+      setWithdrawalTotal(total);
+    };
+    fetchWithdrawalTotal();
+  }, [account.amount, account.accountNumber]);
 
   const depositFunds = async () => {
     resetMessages();
@@ -180,6 +194,7 @@ export const AccountDashboard = (props: AccountDashboardProps) => {
                 <Alert severity="success">{withdrawSuccessMessage}</Alert>
               )}
               <h3>Withdraw</h3>
+              <p>Daily Withdrawal Total: ${withdrawalTotal ?? 0}</p>
               <div
                 style={{
                   gap: 20,

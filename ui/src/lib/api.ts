@@ -3,7 +3,7 @@
 
 const BASE_URL = "http://localhost:3000";
 
-export async function api<T>(path: string, options: RequestInit): Promise<T> {
+export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     const response = await fetch(`${BASE_URL}/${path}`, options);
     const data = await response.json();
 
